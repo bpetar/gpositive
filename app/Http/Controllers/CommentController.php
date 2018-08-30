@@ -39,8 +39,11 @@ class CommentController extends Controller
         // check if user logged in
         if(!Auth::user())
         {
-            dd('there was problem saying you are not logged in');
-            return;
+            //dd('there was problem saying you are not logged in');
+            $request->flash();
+            $comment = $request->get('text');
+            //dd($comment);
+            return redirect()->guest('login')->with('comment', $comment);
         }
 
         $inss = $request->all();

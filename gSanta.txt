@@ -37,6 +37,9 @@
  + protect create/edit/delete route if logged in is not author
  + add course picture
 
+### this is not working as expected, but should be investigated: php artisan make:resource books
+### i looked for command to make everything in one go: models, migrations, controller, routes - full rest api scafolding for one model.
+php artisan make:auth
 php artisan make:model Article -m
 php artisan make:controller ArticleController --resource
 php artisan make:migration change_body_of_articles
@@ -85,11 +88,13 @@ attach tag to article
  + submit comment when logged in
  - admin to see list of all comments and edit/delete them
  - korisnici da imaju opciju da postuju anonimous
+ - when unauthenticated posts comment send him to login and post comment
 
 .add tags
  + create model and controller
  + many to many relationship with article
  - add new tags while creating article
+ - add tag colors
 
 artisan tinker tag:
  $tag = new App\Tag;
@@ -169,5 +174,16 @@ eyJpdiI6Ilhnd2xOb3hVckhcL0h4c1BzWXR6RXZnPT0iLCJ2YWx1ZSI6InowTTIwNWdmZjRFeHBSZWk1
 
 .contact
 
+.footer
+
 .about
  - make 'site about' to be one of articles so author/admin can edit it like article
+
+
+creds:
+
+[4:36:08 PM] Predrag Lukesevic: Hostuje se na awardspace.com
+[4:36:25 PM] Predrag Lukesevic: Username : lukesevic@gmail.com
+[4:36:34 PM] Predrag Lukesevic: Pass: nenadl85
+
+Gogin pass za heroku sajt: supica32
