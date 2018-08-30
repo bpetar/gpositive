@@ -17,9 +17,11 @@ return [
     'author' => 'Author',
     'authors' => 'Authors',
     'article' => 'Article',
-    'articles' => 'PArticles',
+    'articles' => 'Articles',
     'course' => 'Course',
     'courses' => 'Courses',
-    'event' => 'Event',
-    'events' => 'Events',
+    'event' => 'COUNSELING CENTER GARDEN',
+    'events' => 'Psychology Counseling Center Garden',
+    'workshops' => 'Workshops',
+    'positive' =>'POSITIVE PSYCHOLOGY CENTER'
 ];
