@@ -36,16 +36,24 @@ return [
     ],
 
     'google' => [
-        'client_id' => '57182562399-4up23bv4k5bdtv5ld6g1hol6pam0cb3b.apps.googleusercontent.com',
-        'client_secret' => 'yB6W0cYr0QUsYK_DcGWSQ8h7',
-        'redirect' => 'http://gpositive.app/auth/google/callback',
+        'client_id' => '153237184271-btq370jmm00kjub501bvusm1765ep432.apps.googleusercontent.com',
+        'client_secret' => '8-eLWRZhDj199CdBq7AwzIPC',
+        'redirect' => 'http://gpositive.herokuapp.com/callback/google',
     ],
 
     'facebook' => [
-    'client_id' => '278732849245974',
-    'client_secret' => 'ac354b2f7b1b75ec905144cdc94edc45',
-    'redirect' => env('FACEBOOK_REDIRECT'),
+    'client_id' => '122590138393703',
+    'client_secret' => 'b2a188ae62ef9aca07dea9a01f6d4086',
+    'redirect' => 'http://gpositive.herokuapp.com/callback/facebook',
     
     ],
 
+    'twitter' => [
+    'client_id' => 'xXy8z4ZueK0TF2eEjCJItwKzd',
+    'client_secret' => '9QhdPBJ1ZkKUoWVlgtX8SlVnZaxmLuykV5z6Dn4jI09qFMM4Fu',
+    'redirect' => 'http://gpositive.herokuapp.com/callback/twitter',
+    
+    ]
+
+    
 ];

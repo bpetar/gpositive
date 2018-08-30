@@ -70,6 +70,10 @@
 	<div class="col-md-6">
 	    {!! Form::select('tag_list[]', $tags, null, array('class' => 'form-control', 'multiple')) !!}
 	</div>
+	<label for="tag_list" class="col-md-4 control-label">New tags</label>
+	<div class="col-md-6 ">
+	    {!! Form::text('new_tag', null, array('class' => 'form-control', 'placeholder'=> 'Enter new tags here..')) !!}
+	</div>
 </div>
 
 {{--Item Price--}}
@@ -114,14 +118,17 @@
 
 		{{--<div style="border: solid #cccccc 1px; width: 100%; height: 200px; background:url('/@if(! empty($item)) {{$item->image}} @endif'); background-size:cover;"></div>--}}
 		
-	    {!! Form::file('image') !!}
+		{!! Form::file('image') !!}
 
+		
 
+	    
+<!--
 	    @if ($errors->has('image'))
 	        <span class="help-block">
 	            <strong>{{ $errors->first('image') }}</strong>
 	        </span>
-	    @endif
+	    @endif  -->
 	</div>
 </div>
 

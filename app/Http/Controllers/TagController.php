@@ -36,7 +36,12 @@ class TagController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $tag = new Tag;
+        $tag-> name = $request->name;
+        //dd($tag);
+        $tag->save();
+
+        return redirect('articles');
     }
 
     /**
@@ -50,6 +55,7 @@ class TagController extends Controller
         //show all articles by this tag
         $tag = Tag::findOrFail($id);
         $articles = $tag->articles;
+        
         return view('tags.show', compact('tag', 'articles'));
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+require('./../vendor/autoload.php');
+
 use Illuminate\Http\Request;
 use App\Course;
 use App;
@@ -9,6 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Article;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Filesystem\Filesystem;
+
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 class CourseController extends Controller
 {
@@ -34,11 +41,13 @@ class CourseController extends Controller
     public function create()
     {
         // check if admin logged in
-        if(!Auth::user() || (Auth::user()->id != 1 && Auth::user()->id != 2))
+        if(Auth::user()->id != 11 || Auth::user()->id != 1 || Auth::user()->id != 41 || Auth::user()->id != 11)
         {
             dd('there was problem saying you are not admin');
+
             return;
         }
+
         return view('courses.create');
     }
 
@@ -51,9 +60,10 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         // check if admin logged in
-        if(!Auth::user() || (Auth::user()->id != 1 && Auth::user()->id != 2))
+        if(Auth::user()->id != 11 || Auth::user()->id != 1 || Auth::user()->id != 41 || Auth::user()->id != 11)
         {
             dd('there was problem saying you are not admin');
+
             return;
         }
 
@@ -66,39 +76,67 @@ class CourseController extends Controller
         if ($request->hasFile('image')) {
 
             if ($request->file('image')->isValid()) {
+
+                $file = $request->file('image');
                 
                 //set upload path
-                $destinationPath = 'uploads';
+               // $destinationPath = 'uploads';
                 //get filename
                 $filename = $request->file('image')->getClientOriginalName();
+                $uniqFilename = md5($filename . time());
+                $extension = \File::extension($filename);
+                $newName = $uniqFilename . '.' . $extension;
                 //uploading file to given path
-                $request->file('image')->move($destinationPath, $filename);
-                //dd($filename);
-                //set item image
-                $course->image = $destinationPath . '/' . $filename;
+               //Storage::disk('s3')->put('uploads/' . $filename, file_get_contents($file), 'public');
+               // $destinationPath = Storage::disk('s3')->url($filename)
+                // set up s3
+                $bucket = getenv('S3_BUCKET');
+                $address = getenv('S3_ADDRESS');
+                $keyname = 'uploads/'.$newName;
+                $s3 = S3Client::factory([
+                    'version' => '2006-03-01',
+                    'region' => 'us-east-2'
+                ]);
+    
+                // try
+                
+                    // Upload data.
+                    $s3->putObject(array(
+                        'Bucket' => $bucket,
+                        'Key'    => $keyname,
+                        'Body'   => fopen($_FILES['image']['tmp_name'], 'rb'),
+                        'ACL'    => 'public-read'
+                    ));
+    
+                
+               
+
+              //  $request->file('image')->move($destinationPath, $filename);
+               
+
+                //set item image path 
+                $course->image = $address . $bucket . '/' . $keyname;
                 //save
                 $course->save();
 
             }
+
             else
+
             {
                 //there was problem uploading image
                 dd('there was problem uploading image');
-            }
-
-            
+            }            
 
         }
         else
         {
             //image file not uploaded
-            dd('image file not uploaded');
+           // dd('image file not uploaded');
         }
-
-
-
     
         return redirect('courses');
+
     }
 
     /**
@@ -109,8 +147,9 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        //
+        
         $course = Course::findOrFail($id);
+
         return view('courses.show', compact('course'));
     }
 
@@ -123,13 +162,14 @@ class CourseController extends Controller
     public function edit($id)
     {
         // check if admin logged in
-        if(!Auth::user() || (Auth::user()->id != 1 && Auth::user()->id != 2))
+        if(Auth::user()->id != 11 || Auth::user()->id != 1 || Auth::user()->id != 41 || Auth::user()->id != 11)
         {
             dd('there was problem saying you are not admin');
             return;
         }
 
         $course = Course::findOrFail($id);
+
         return view('courses.edit', compact('course'));
     }
 
@@ -143,9 +183,10 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         // check if admin logged in
-        if(!Auth::user() || (Auth::user()->id != 1 && Auth::user()->id != 2))
+        if(Auth::user()->id != 11 )
         {
             dd('there was problem saying you are not admin');
+
             return;
         }
 
@@ -153,33 +194,72 @@ class CourseController extends Controller
         $course = Course::findOrFail($id);
         $course->update($request->all());
 
-        if ($request->hasFile('image'))
-         {  
-            $destinationPath = 'uploads';
-            $image = $request->file('image');
-            $timestamp = str_replace([' ', ':'], '-', Carbon::now()->toDateTimeString()); 
-            $filename = $timestamp. '-' .$image->getClientOriginalName();
-            $course->image = $filename;
-            //uploading file to given path
-            $request->file('image')->move($destinationPath, $filename);
-            //set item image
-            $course->image = $destinationPath . '/' . $filename; 
-             //save
-            $course->save();
-            //$article->update($request->all());
- 
-            //$article->tags()->sync($request->input('tag_list'));
+        if ($request->hasFile('image')) {
 
-            //return redirect('articles');
+            if ($request->file('image')->isValid()) {
+
+                $file = $request->file('image');
+                
+                //set upload path
+               // $destinationPath = 'uploads';
+                //get filename
+                $filename = $request->file('image')->getClientOriginalName();
+                $uniqFilename = md5($filename . time());
+                $extension = \File::extension($filename);
+                $newName = $uniqFilename . '.' . $extension;
+                //uploading file to given path
+               //Storage::disk('s3')->put('uploads/' . $filename, file_get_contents($file), 'public');
+               // $destinationPath = Storage::disk('s3')->url($filename)
+                // set up s3
+                $bucket = getenv('S3_BUCKET');
+                $address = getenv('S3_ADDRESS');
+                $keyname = 'uploads/'.$newName;
+                $s3 = S3Client::factory([
+                    'version' => '2006-03-01',
+                    'region' => 'us-east-2'
+                ]);
+    
+                // try
+                
+                    // Upload data.
+                    $s3->putObject(array(
+                        'Bucket' => $bucket,
+                        'Key'    => $keyname,
+                        'Body'   => fopen($_FILES['image']['tmp_name'], 'rb'),
+                        'ACL'    => 'public-read'
+                    ));
+    
+                
+               
+
+              //  $request->file('image')->move($destinationPath, $filename);
+               
+
+                //set item image path
+                $course->image = $address . $bucket . '/' . $keyname;
+                //save
+                $course->save();
+
+            }
+
+            else
+
+            {
+                //there was problem uploading image
+                dd('there was problem uploading image');
+            }
+
             
-            //dd ('slika uspesno upload-ovana');
-            //return;
-            //return '/uploads/' . $filename;
-            //return redirect('articles');                  
-        }   
 
+        }
 
-        
+        else
+
+        {
+            //image file not uploaded
+            //dd('image file not uploaded');
+        }
+
         return redirect('courses');
     }
 
@@ -192,14 +272,14 @@ class CourseController extends Controller
     public function destroy($id)
     {
         // check if admin logged in
-        if(!Auth::user() || (Auth::user()->id != 1 && Auth::user()->id != 2))
+        if(Auth::user()->id != 11 || Auth::user()->id != 1 || Auth::user()->id != 41 || Auth::user()->id != 11)
         {
             dd('there was problem saying you are not admin');
+
             return;
         }
 
         $course = Course::findOrFail($id);
-
         $course->delete();
         
         return redirect('courses');

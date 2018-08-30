@@ -1,6 +1,9 @@
 <?php
 
+
 namespace App\Http\Controllers;
+
+require('./../vendor/autoload.php');
 
 use Illuminate\Http\Request;
 use App\Article;
@@ -11,6 +14,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Comment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use App\Http\Controllers\File;
+use App\Http\Controllers\Log;
+
+
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 class ArticleController extends Controller
 {
@@ -35,18 +46,18 @@ class ArticleController extends Controller
     {
         //not logged in, no editing articles
         if(!Auth::user())
-        {
-            dd('there was problem saying you are not logged in');
-            return;
-        }
+            {
+                dd('there was problem saying you are not logged in');
+                return;
+            }
 
         // check if author logged in
         if(!Auth::user()->author)
-        {
-            dd('there was problem saying you are not author');
-            return;
-        }
-        
+            {
+                dd('there was problem saying you are not author');
+                return;
+            }
+
         $tags = Tag::pluck('name', 'id');
         $courses = [0 => 'None'] + DB::table('courses')->pluck('title','id')->toArray();
 
@@ -65,16 +76,16 @@ class ArticleController extends Controller
         //$request->input('author') = 'Gorana Rakic-Bajic';
 
         if(!Auth::user())
-        {
-            dd('there was problem saying you are not logged in');
-            return;
-        }
+            {
+                dd('there was problem saying you are not logged in');
+                return;
+            }
 
         if(!Auth::user()->author)
-        {
-            dd('there was problem saying you are not author');
-            return;
-        }
+            {
+                dd('there was problem saying you are not author');
+                return;
+            }
 
         $inss = $request->all();
         //dd($inss);
@@ -84,42 +95,96 @@ class ArticleController extends Controller
         $article = Article::create($inss);
 
         //dd($request->input('tag_list'));
+
+
+        //adding new tag
+
+        $tag = explode(' ' , $inss['new_tag']);
+        $countTags=count($tag);
+        //dd($tag, $countTags);
+
+        for ($i=0; $i < $countTags; $i++) { 
+         # code...
+
+        $tagdone = Tag::create(['name'=>$tag[$i]]);
+        $tagid = $tagdone->id;
+        $article->tags()->attach($tagid);
+        }
+
         $article->tags()->attach($request->input('tag_list'));
-    
+
         //$article->author = 'Gorana Rakic-Bajic';
 
         if ($request->hasFile('image')) {
 
             if ($request->file('image')->isValid()) {
-                
+
+                $file = $request->file('image');
+
                 //set upload path
-                $destinationPath = 'uploads';
+                // $destinationPath = 'uploads';
                 //get filename
                 $filename = $request->file('image')->getClientOriginalName();
+                $uniqFilename = md5($filename . time());
+                $extension = \File::extension($filename);
+                $newName = $uniqFilename . '.' . $extension;
+
                 //uploading file to given path
-                $request->file('image')->move($destinationPath, $filename);
-                //dd($filename);
-                //set item image
-                $article->image = $destinationPath . '/' . $filename;
+
+               //Storage::disk('s3')->put('uploads/' . $filename, file_get_contents($file), 'public');
+               // $destinationPath = Storage::disk('s3')->url($filename)
+
+                // set up s3
+                $bucket = getenv('S3_BUCKET');
+                $address = getenv('S3_ADDRESS');
+                $keyname = 'uploads/'.$newName;
+                $s3 = S3Client::factory([
+                    'version' => '2006-03-01',
+                    'region' => 'us-east-2'
+                ]);
+
+                // Upload data.
+
+                $s3->putObject(array(
+                    'Bucket' => $bucket,
+                    'Key'    => $keyname,
+                    'Body'   => fopen($_FILES['image']['tmp_name'], 'rb'),
+                    'ACL'    => 'public-read'
+                ));
+
+
+                //  $request->file('image')->move($destinationPath, $filename);
+
+
+                //set item image address
+
+                $article->image = $address . $bucket . '/' . $keyname;
+               
                 //save
+
                 $article->save();
 
             }
+            
             else
+            
             {
                 //there was problem uploading image
                 dd('there was problem uploading image');
+            
             }
 
-            
-
         }
-        else
+        
+        else 
+                
         {
             //image file not uploaded
-            dd('image file not uploaded');
+            //dd('image file not uploaded');
         }
 
+        //log write about created article
+        \Log::info('Kreiran clanak: ' . $article->id . 'Ko: ' . $article['author_id'] . 'Sa slikom: '.$article->image);
 
         return redirect('articles');
     }
@@ -146,32 +211,36 @@ class ArticleController extends Controller
     public function edit($id)
     {
         //not logged in, no editing articles
+
         if(!Auth::user())
-        {
-            dd('there was problem saying you are not logged in');
-            return;
-        }
+            {
+                dd('there was problem saying you are not logged in');
+                return;
+            }
 
         //check if user is author
-        if(!Auth::user()->author)
-        {
-            dd('there was problem saying you are not author');
-            return;
-        }
+        
+        if(!Auth::user()->author && !Auth::user('id'=='11'))
+            {
+                dd('there was problem saying you are not author');
+                return;
+            }
 
         $article = Article::findOrFail($id);
 
+
         //check if author is editing his article
-        if(Auth::user()->author->id != $article->author_id)
-        {
-            dd('there was problem saying you are not author of this article');
-            return;
-        }
+        if(Auth::user()->author->id != $article->author_id && !Auth::user('id'=='11'))
+            {
+                dd('there was problem saying you are not author of this article');
+                return;
+            }
 
         $tags = Tag::pluck('name', 'id')->toArray();
         $courses = [0 => 'None'] + DB::table('courses')->pluck('title','id')->toArray();
 
         return view('articles.edit', compact('article', 'courses', 'tags'));
+
     }
 
     /**
@@ -185,69 +254,108 @@ class ArticleController extends Controller
     {
         //not logged in, no updating articles
         if(!Auth::user())
-        {
-            dd('there was problem saying you are not logged in');
-            return;
-        }
+            {
+                dd('there was problem saying you are not logged in');
+                return;
+            }
 
         //check if user is author
         if(!Auth::user()->author)
-        {
-            dd('there was problem saying you are not author');
-            return;
-        }
+            {
+                dd('there was problem saying you are not author');
+                return;
+            }
 
         //find specified article
         $article = Article::findOrFail($id);
+        $imageLink = $article['image'];
 
+                
         //check if author is editing his article
-        if(Auth::user()->author->id != $article->author_id)
-        {
-            dd('there was problem saying you are not author of this article');
-            return;
-        }
-        
-        
+        if(Auth::user()->author->id != $article->author_id && !Auth::user('id'=='11'))
+            {
+                dd('there was problem saying you are not author of this article');
+                return;
+            }
+
+
 
         // and update it
         $article->update($request->all());
 
         $article->tags()->sync($request->input('tag_list'));
 
-         if ($request->hasFile('image'))
-         {  
-            $destinationPath = 'uploads';
-            $image = $request->file('image');
-            $timestamp = str_replace([' ', ':'], '-', Carbon::now()->toDateTimeString()); 
-            $filename = $timestamp. '-' .$image->getClientOriginalName();
-            $article->image = $filename;
-            //uploading file to given path
-            $request->file('image')->move($destinationPath, $filename);
-            //set item image
-            $article->image = $destinationPath . '/' . $filename; 
-             //save
+
+        if ($request->hasFile('image')) {
+
+            if ($request->file('image')->isValid()) {
+
+                $file = $request->file('image');
+
+                //set upload path
+                // $destinationPath = 'uploads';
+
+                //get filename
+
+                $filename = $request->file('image')->getClientOriginalName();
+                $uniqFilename = md5($filename . time());
+                $extension = \File::extension($filename);
+                $newName = $uniqFilename . '.' . $extension;
+                //uploading file to given path
+                //Storage::disk('s3')->put('uploads/' . $filename, file_get_contents($file), 'public');
+                // $destinationPath = Storage::disk('s3')->url($filename)
+                // set up s3
+                $bucket = getenv('S3_BUCKET');
+                $address = getenv('S3_ADDRESS');
+                $keyname = 'uploads/'.$newName;
+                $s3 = S3Client::factory([
+                    'version' => '2006-03-01',
+                    'region' => 'us-east-2'
+                ]);           
+
+                // Upload data.
+
+                $s3->putObject(array(
+                    'Bucket' => $bucket,
+                    'Key'    => $keyname,
+                    'Body'   => fopen($_FILES['image']['tmp_name'], 'rb'),
+                    'ACL'    => 'public-read'
+                ));
+
+                //  $request->file('image')->move($destinationPath, $filename);
+
+                //set item image
+                
+                $article->image = $address . $bucket . '/' . $keyname;
+                
+                //save
+
+                $article->save();
+
+            }
+
+            else
+
+            {
+                //there was problem uploading image
+                dd('there was problem uploading image');
+            }
+
+        }
+
+        else
+
+        {
+            //image file not uploaded
+            // dd('image file not uploaded');
+            $article->image = $imageLink;
+            //save
+
             $article->save();
-            //$article->update($request->all());
- 
-            //$article->tags()->sync($request->input('tag_list'));
+        }
 
-            //return redirect('articles');
-            
-            //dd ('slika uspesno upload-ovana');
-            //return;
-            //return '/uploads/' . $filename;
-            //return redirect('articles');                  
-        }   
-
- 
-        
-
-      
-
-
-
-
-
+         //log write about updated article
+        \Log::info('Updateovan clanak: ' . $id . 'Ko: ' . $article['author_id'] . 'Sa slikom: '.$article->image);
 
 
         return redirect('articles');
@@ -263,30 +371,33 @@ class ArticleController extends Controller
     {
         //not logged in, no updating articles
         if(!Auth::user())
-        {
-            dd('there was problem saying you are not logged in');
-            return;
-        }
+            {
+                dd('there was problem saying you are not logged in');
+                return;
+            }
 
         //check if user is author
-        if(!Auth::user()->author)
-        {
-            dd('there was problem saying you are not author');
-            return;
-        }
+        if(!Auth::user()->author )
+            {
+                dd('there was problem saying you are not author');
+                return;
+            }
 
         //find specified article
         $article = Article::findOrFail($id);
 
         //check if author is editing his article
-        if(Auth::user()->author->id != $article->author_id)
-        {
-            dd('there was problem saying you are not author of this article');
-            return;
-        }
+        if(Auth::user()->author->id != $article->author_id && !Auth::user('id'=='11'))
+            {
+                dd('there was problem saying you are not author of this article');
+                return;
+            }
 
         $article->delete();
-        
+
+         //log write about deleted article
+        \Log::info('Izbrisan clanak: ' . $id . 'Ko: ' . $article['author_id']);
+
         return redirect('articles');
     }
 }

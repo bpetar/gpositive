@@ -4,7 +4,7 @@
 @section('content')
 <div class="w3-content" style="max-width:1400px">
   <div class="w3-card-4 w3-margin w3-white ">
-    <div class="article_image" style="background:url('/{{$article->image}}') no-repeat;display:block;margin-left:auto;margin-right:auto;background-size:cover; width:100%; background-position: 0px -50px; height:500px;"></div>
+    <div class="article_image" style="background:url('{{$article->image}}') no-repeat;display:block;margin-left:auto;margin-right:auto;background-size:cover; width:100%; background-position: 0px -50px; height:500px;"></div>
     <div class="w3-container w3-padding-8">
       @if ($article->course)
         <h4><b><a style="color:black;" href="/courses/{{$article->course->id}}">{{$article->course->title}}</a></b></h4>
@@ -15,7 +15,7 @@
     </div>
 
     <div class="w3-container">
-      <div style="height:100px; width:100%; overflow:hidden;">
+      <div style="height:auto; width:100%; overflow:auto;">
         {!! $article->body !!}
       </div>
       @if ($article->tags)
@@ -29,11 +29,32 @@
       <div class="w3-row">
         <div class="w3-col m8 s12">
           <p>Comments:</p>
-          <p>
+          
             @foreach ($article->comments as $comment)
-            <p>{{$comment->user->name}}: {{$comment->text}}</p>
+
+
+
+             <div class="form-group">
+              
+
+                @if (auth()->check() && (auth()->user()->id == 11  || (auth()->user()->author && auth()->user()->author->id == $article->author->id)))
+
+                {{ Form::open(array('url' => URL::to('/comments/' . $comment->id), 'method' => 'DELETE', 'style'=>'display:inline-block')) }}
+   
+                  <p>{{$comment->user->name}}: {{$comment->text}} <strong>{{$comment->created_at->diffForHumans()}}</strong>
+                    <button type="submit" class="btn btn-default pull-right">
+                      <i class="fa fa-btn fa-trash-o" px;"></i>
+                    </button>
+                  </p>
+                {{ Form::close() }}
+              
+              @else
+                  <p>{{$comment->user->name}}: {{$comment->text}} <strong>{{$comment->created_at->diffForHumans()}}</strong></p>
+              @endif
+
+              </div>
             @endforeach
-          </p>
+          
           <!-- <div class="w3-col m4 w3-hide-small">
             <p>
             <span class="w3-padding-large w3-right"><b>Comments</b>
