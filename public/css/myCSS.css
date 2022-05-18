@@ -1,0 +1,25 @@
+
+.highlight {
+  background-color: #D3D3D3;
+}
+
+.sizzer {
+}
+
+.sizzer-pic {
+    height: 51.5vw;
+}
+
+
+@media (min-width:1200px) {
+    
+    .sizzer {
+        width: 1160px;
+        display: inline-block;
+    }
+    
+    .sizzer-pic {
+        height: 640px;
+    }
+
+}
