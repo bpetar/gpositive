@@ -43,6 +43,10 @@ Route::resource('tags','TagController');
 
 //Route::get('/home', 'HomeController@index');
 
+Route::get('/aboutus', 'HomeController@aboutus');
+Route::get('/texts', 'HomeController@texts');
+Route::get('/programs', 'HomeController@programs');
+
 /*Route::get('courses', function () {
     return view('courses');
 });*/
@@ -57,14 +61,14 @@ Route::resource('workshops','WorkshopController');
 //Route::get('/comments/{{$article->id}}','CommentController@show');
 Route::get('/comments/{article_id}' ,'CommentController@show');
 
-/*
+
 Route::post('upload/image', function(Request $request) {
     $file = $request->file('file');
     $filename = $file->getClientOriginalName();
     $file->move('uploads/', $filename);
     return '/uploads/' . $filename;
 });
-*/
+
 /*
 Route::get('test', function(){
 

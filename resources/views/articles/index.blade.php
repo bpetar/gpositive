@@ -16,17 +16,8 @@
     @if(count($articles) === 0)
 
     <div class="w3-card-4 w3-margin w3-white">
-      <img src="/images/pisaca.jpg" alt="Norway" style="width:100%">
       <div class="w3-container w3-padding-8">
-        <h3><b>NEDOSTATAK TEKSTOVA</b></h3>
-        <h5>Malo objasnjenje, <span class="w3-opacity">Avgust 18 2017</span></h5>
-      </div>
-
-      <div class="w3-container">
-        <p>Autori textova su usled nedostatka ispiracije uzeli pauzu kako bi pronashli savrshen kapucino. Ne brinite chim ga pronadju, vratice im se inspiracija. Samim tim bice i textova!  </p>
-        <div class="w3-row">       
-
-        </div>
+        <h3><b>No Articles found</b></h3>
       </div>
     </div>
     
