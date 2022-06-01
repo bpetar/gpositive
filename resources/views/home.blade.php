@@ -13,13 +13,13 @@ and is wrapped around the whole page content, except for the footer in this exam
   <div class="w3-row" style="text-align: center;">
   @foreach ($articles as $article)
 
-  @if ($article->category != "text")
+  @if ($article->category != "text") <!-- and not program either? -->
   <!-- Blog entry -->
   <div class="w3-card-4 w3-margin w3-white sizzer">
 
     <div class="article_image sizzer-pic" style="background:url('{{$article->image}}') no-repeat; background-size:cover; cursor: pointer; width:100%; background-position: 0px 0px;" onclick="{window.location.href = '/articles/{{$article->id}}'}"> </div>
     <div class="w3-container w3-padding-8">
-      <h3 class="article_heading"><b><a href="/articles/{{$article->id}}">{{$article->title}}</a></b></h3>
+      <h3 class="article_heading sizzer_title"><b><a href="/articles/{{$article->id}}">{{$article->title}}</a></b></h3>
       <h5 style="font-style: italic;">{{$article->description}}</h5>
     </div>
   </div>

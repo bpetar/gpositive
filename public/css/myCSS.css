@@ -10,6 +10,9 @@
     height: 51.5vw;
 }
 
+sizzer_title {
+  font-size: 24px;
+}
 
 @media (min-width:1200px) {
     
